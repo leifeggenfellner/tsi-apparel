@@ -86,6 +86,8 @@ VALID_CATEGORIES = frozenset(
         "Annet",
     }
 )
+# Prints on these are still made (and charged), but get no placement
+# instruction: the club has no standard spot and uses the factory default.
 PRINT_INSTRUCTION_SUPPRESSION_CATEGORIES = frozenset(
     {
         "Bag / Ryggsekk",
