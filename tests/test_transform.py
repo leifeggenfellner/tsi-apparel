@@ -194,6 +194,18 @@ def test_validate_source_schema_rejects_invalid_families(headers: list[str]) -> 
         app.validate_source_schema(headers)
 
 
+def test_load_source_trims_every_value(tmp_path: Path) -> None:
+    source = tmp_path / "source.csv"
+    write_csv(
+        source,
+        [["Full Name", *basic_headers()], [" Ola Nordmann  ", " yes", "1 ", "  M", "", "", "", "", ""]],
+    )
+
+    frame, _, _ = app._load_source(source)
+
+    assert frame.row(0) == ("Ola Nordmann", "yes", "1", "M", "", "", "", "", "")
+
+
 def test_first_field() -> None:
     headers = ["Order Tee", "Tee Quantity", "Tee Size", "Other Size", "Order Cap"]
     row = ("yes", "2", " M ", "", "yes")
