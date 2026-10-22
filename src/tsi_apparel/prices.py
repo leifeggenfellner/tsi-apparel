@@ -41,14 +41,13 @@ LIST_PRICES = {
     "fixed socks": Decimal("169"),
     "trip": Decimal("999"),
     "rookie": Decimal("1099"),
-    # Two prices were supplied for Academy Evo (1099 and 751); the order form
-    # has a single Academy Evo option, so the higher one is used here.
-    "academy evo": Decimal("1099"),
+    "academy evo": Decimal("751"),
     "pepper": Decimal("292"),
     "metel": Decimal("199"),
     "blizzard": Decimal("449"),
+    "rivet": Decimal("249"),
+    "barrier": Decimal("499"),
     "poplar": Decimal("989"),
-    # Rivet and Barrier have no price yet.
 }
 
 PRINT_PRICES = {

@@ -299,3 +299,25 @@ def test_print_order_can_exclude_print_costs_or_hide_prices(
     app.print_order(row, headers, lines, show_prices=False)
     out = capsys.readouterr().out
     assert "kr" not in out and "Total garments: 1" in out
+
+
+def test_initials_on_bags_are_charged_as_a_transfer_print(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    headers = CONTACT_HEADERS + [
+        "Order Rookie",
+        "Rookie Size",
+        "Rookie Black Quantity",
+        "Rookie Initials",
+        "Rookie Initials Quantity",
+    ]
+    row = ("S1", "R1", "t", "Kari Nordmann", "kari@example.com", "1", "Yes", "", "1", "KN", "")
+    lines = app.order_lines(row, headers, family_ranges(headers))
+
+    app.print_order(row, headers, lines)
+
+    out = capsys.readouterr().out
+    # Rookie 1099 / 2 = 549.50, plus one initials transfer at 49.60.
+    assert "Clothing: 549.50 kr" in out
+    assert "Prints:   49.60 kr" in out
+    assert "Total:    599.10 kr" in out
