@@ -1,0 +1,10 @@
+# Order data contains personal information; never commit it.
+*.csv
+!order_schema.csv
+
+.venv/
+.direnv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+result
