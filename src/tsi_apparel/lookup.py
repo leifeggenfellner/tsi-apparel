@@ -1,12 +1,11 @@
-#!/usr/bin/env python3
 """Look up a person's order from apparel_order.csv for pickup-desk use.
 
 Usage:
-    python3 lookup_order.py                                # interactive: keeps prompting
-    python3 lookup_order.py "nordmann"                     # one-shot search, then exit
-    python3 lookup_order.py --input other.csv "nordmann"
-    python3 lookup_order.py --no-print-costs "nordmann"    # garments only
-    python3 lookup_order.py --hide-prices "nordmann"       # no prices at all
+    apparel lookup                                # interactive: keeps prompting
+    apparel lookup "nordmann"                     # one-shot search, then exit
+    apparel lookup --input other.csv "nordmann"
+    apparel lookup --no-print-costs "nordmann"    # garments only
+    apparel lookup --hide-prices "nordmann"       # no prices at all
 
 Matches on name, email, or phone number (partial, case- and
 diacritic-insensitive, so "ase" finds "Åse").
@@ -20,8 +19,8 @@ import unicodedata
 from decimal import Decimal
 from pathlib import Path
 
-from prices import PRINT_PRICES, format_nok, garment_unit_price
-from transform_apparel_orders import (
+from .prices import PRINT_PRICES, format_nok, garment_unit_price
+from .transform import (
     TransformError,
     _load_source,
     customization_fields,
@@ -213,8 +212,7 @@ def search(
     return len(matched_rows)
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
+def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("query", nargs="?", help="Name, email, or phone to search for")
     parser.add_argument(
         "--input", default="apparel_order.csv", help="Source order CSV (default: %(default)s)"
@@ -227,7 +225,9 @@ def main() -> None:
     parser.add_argument(
         "--hide-prices", action="store_true", help="Do not show any prices"
     )
-    arguments = parser.parse_args()
+
+
+def run(arguments: argparse.Namespace) -> None:
     price_options = {
         "show_prices": not arguments.hide_prices,
         "include_print_costs": not arguments.no_print_costs,
@@ -252,5 +252,9 @@ def main() -> None:
         search(query, source_rows, headers, families, **price_options)
 
 
-if __name__ == "__main__":
-    main()
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    add_arguments(parser)
+    run(parser.parse_args(argv))

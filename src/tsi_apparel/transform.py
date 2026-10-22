@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Expand apparel order CSV families into the supplied order-form template."""
 
 from __future__ import annotations
@@ -14,6 +13,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import polars as pl
+
+DEFAULT_TEMPLATE = Path(__file__).parent / "data" / "order_schema.csv"
 
 PRODUCT_ROW = 9
 CATEGORY_ROW = 10
@@ -647,20 +648,33 @@ def transform(
     return orders.source_total, len(orders.print_rows)
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("input_path", nargs="?")
-    parser.add_argument("template_path", nargs="?")
-    parser.add_argument("output_path", nargs="?")
-    parser.add_argument("--input")
-    parser.add_argument("--template")
-    parser.add_argument("--output")
+def add_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "input_path", nargs="?", help="Form answers CSV (positional form of --input)"
+    )
+    parser.add_argument(
+        "template_path", nargs="?", help="Order sheet template (positional form of --template)"
+    )
+    parser.add_argument(
+        "output_path", nargs="?", help="Where to write the result (positional form of --output)"
+    )
+    parser.add_argument(
+        "--input", help="Form answers CSV (default: apparel_order.csv)"
+    )
+    parser.add_argument(
+        "--template", help="Order sheet template (default: the bundled order_schema.csv)"
+    )
+    parser.add_argument(
+        "--output", help="Where to write the result (default: populated_order_schema.csv)"
+    )
     parser.add_argument(
         "--category",
         default="Apparel",
         help="Deprecated and ignored; product categories are resolved from the source product",
     )
-    arguments = parser.parse_args()
+
+
+def run(arguments: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
     positional_paths = (
         arguments.input_path,
         arguments.template_path,
@@ -683,7 +697,7 @@ def main() -> None:
         for positional_path, option_path, default in zip(
             positional_paths,
             option_paths,
-            ("apparel_order.csv", "order_schema.csv", "populated_order_schema.csv"),
+            ("apparel_order.csv", DEFAULT_TEMPLATE, "populated_order_schema.csv"),
         )
     )
     try:
@@ -698,5 +712,7 @@ def main() -> None:
     print(f"Wrote {output_name}: {quantity} garments, {print_count} print rows")
 
 
-if __name__ == "__main__":
-    main()
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    add_arguments(parser)
+    run(parser.parse_args(argv), parser)

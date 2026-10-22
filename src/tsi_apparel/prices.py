@@ -11,7 +11,7 @@ from decimal import Decimal
 
 CLOTHING_DISCOUNT = Decimal("0.50")
 
-# Keys are product names as normalized by transform_apparel_orders.normalized().
+# Keys are product names as normalized by tsi_apparel.transform.normalized().
 LIST_PRICES = {
     "wyvern kit": Decimal("999"),
     "wisp": Decimal("669"),
