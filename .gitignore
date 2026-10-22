@@ -1,6 +1,6 @@
 # Order data contains personal information; never commit it.
 *.csv
-!order_schema.csv
+!src/tsi_apparel/data/order_schema.csv
 
 .venv/
 .direnv/

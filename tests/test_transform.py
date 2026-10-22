@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-import transform_apparel_orders as app
+from tsi_apparel import transform as app
 
 
 def write_csv(path: Path, rows: list[list[str]]) -> None:

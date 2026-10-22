@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-import lookup_order as app
-from transform_apparel_orders import family_ranges
+from tsi_apparel import lookup as app
+from tsi_apparel.transform import family_ranges
 
 
 def write_csv(path: Path, rows: list[list[str]]) -> None:
@@ -56,7 +56,7 @@ def test_order_lines_extracts_single_family_line() -> None:
         "S1", "R1", "2026-09-17 10:00:00", "Ola Nordmann", "ola@example.com", "4700000000",
         "yes", "2", "M", "BACK", "IN", "8", "9", "1",
     )
-    from transform_apparel_orders import family_ranges
+    from tsi_apparel.transform import family_ranges
 
     lines = app.order_lines(row, headers, family_ranges(headers))
 
@@ -82,7 +82,7 @@ def test_order_lines_extracts_single_family_line() -> None:
 def test_order_lines_handles_poplar_dual_color_columns() -> None:
     headers = CONTACT_HEADERS + POPLAR_FAMILY_HEADERS
     row = ("S1", "R1", "2026-09-17 10:00:00", "Someone", "s@example.com", "1", "yes", "1", "2", "M")
-    from transform_apparel_orders import family_ranges
+    from tsi_apparel.transform import family_ranges
 
     lines = app.order_lines(row, headers, family_ranges(headers))
 
@@ -94,7 +94,7 @@ def test_order_lines_handles_poplar_dual_color_columns() -> None:
 def test_order_lines_skips_zero_quantity_families() -> None:
     headers = CONTACT_HEADERS + WISP_FAMILY_HEADERS
     row = ("S1", "R1", "2026-09-17 10:00:00", "Nobody", "n@example.com", "1", "no", "", "", "", "", "", "", "")
-    from transform_apparel_orders import family_ranges
+    from tsi_apparel.transform import family_ranges
 
     assert app.order_lines(row, headers, family_ranges(headers)) == []
 
@@ -161,7 +161,7 @@ def test_print_order_lists_items_and_total(capsys: pytest.CaptureFixture[str]) -
 def test_search_reports_no_match(capsys: pytest.CaptureFixture[str]) -> None:
     headers = CONTACT_HEADERS + WISP_FAMILY_HEADERS
     rows = [("S1", "R1", "t", "Someone Else", "e@example.com", "1", "no", "", "", "", "", "", "", "")]
-    from transform_apparel_orders import family_ranges
+    from tsi_apparel.transform import family_ranges
 
     matched = app.search("Bob Smith", rows, headers, family_ranges(headers))
 
@@ -176,7 +176,7 @@ def test_search_reports_multiple_matches(capsys: pytest.CaptureFixture[str]) -> 
         ("S1", "R1", "t1", "Kari Nordmann", "a@example.com", "1", "no", "", "", "", "", "", "", ""),
         ("S2", "R2", "t2", "Ola Nordmann", "b@example.com", "2", "yes", "1", "M", "", "", "", "", ""),
     ]
-    from transform_apparel_orders import family_ranges
+    from tsi_apparel.transform import family_ranges
 
     matched = app.search("nordmann", rows, headers, family_ranges(headers))
 
