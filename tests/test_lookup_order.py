@@ -39,11 +39,11 @@ def make_person_csv(path: Path, rows: list[list[str]], extra_headers: list[str])
 @pytest.mark.parametrize(
     ("value", "expected"),
     [
-        ("Søreide", "soreide"),
+        ("Åse Nordmann", "ase nordmann"),
         ("BLÅBÆRSYLTETØY", "blabaersyltetoy"),
         ("  Multiple   Spaces ", "multiple spaces"),
         ("café", "cafe"),
-        ("Berg", "berg"),
+        ("Smith", "smith"),
     ],
 )
 def test_fold(value: str, expected: str) -> None:
@@ -53,7 +53,7 @@ def test_fold(value: str, expected: str) -> None:
 def test_order_lines_extracts_single_family_line() -> None:
     headers = CONTACT_HEADERS + WISP_FAMILY_HEADERS
     row = (
-        "S1", "R1", "2026-09-17 10:00:00", "Ola Fjell Berg", "ola@example.com", "4700000000",
+        "S1", "R1", "2026-09-17 10:00:00", "Ola Nordmann", "ola@example.com", "4700000000",
         "yes", "2", "M", "BACK", "IN", "8", "9", "1",
     )
     from transform_apparel_orders import family_ranges
@@ -102,9 +102,9 @@ def test_order_lines_skips_zero_quantity_families() -> None:
 @pytest.mark.parametrize(
     ("query", "expected"),
     [
-        ("soreide", True),
-        ("SØREIDE", True),
-        ("kare.soreide@example.com", True),
+        ("ase", True),
+        ("ÅSE NORDMANN", True),
+        ("ase.nordmann@example.com", True),
         ("4700000002", True),
         ("nobody", False),
     ],
@@ -112,7 +112,7 @@ def test_order_lines_skips_zero_quantity_families() -> None:
 def test_matches_query_checks_name_email_and_phone(query: str, expected: bool) -> None:
     headers = CONTACT_HEADERS + WISP_FAMILY_HEADERS
     row = (
-        "S1", "R1", "2026-09-25 20:52:25", "Kåre Søreide", "kare.soreide@example.com",
+        "S1", "R1", "2026-09-25 20:52:25", "Åse Nordmann", "ase.nordmann@example.com",
         "4700000002", "no", "", "", "", "", "", "", "",
     )
     assert app.matches_query(row, headers, query) is expected
@@ -132,7 +132,7 @@ def test_print_order_reports_no_items_when_no_lines(capsys: pytest.CaptureFixtur
 def test_print_order_lists_items_and_total(capsys: pytest.CaptureFixture[str]) -> None:
     headers = CONTACT_HEADERS + WISP_FAMILY_HEADERS
     row = (
-        "S1", "R1", "2026-09-17 21:36:29", "Ola Fjell Berg", "ola@example.com",
+        "S1", "R1", "2026-09-17 21:36:29", "Ola Nordmann", "ola@example.com",
         "4700000001", "yes", "2", "M", "BACK", "IN", "8", "9", "1",
     )
     lines = [
@@ -152,7 +152,7 @@ def test_print_order_lists_items_and_total(capsys: pytest.CaptureFixture[str]) -
     app.print_order(row, headers, lines)
 
     out = capsys.readouterr().out
-    assert "Ola Fjell Berg" in out
+    assert "Ola Nordmann" in out
     assert "4700000001" in out
     assert "Wisp" in out and "Black" in out and "M" in out
     assert "Total garments: 2" in out
@@ -163,28 +163,28 @@ def test_search_reports_no_match(capsys: pytest.CaptureFixture[str]) -> None:
     rows = [("S1", "R1", "t", "Someone Else", "e@example.com", "1", "no", "", "", "", "", "", "", "")]
     from transform_apparel_orders import family_ranges
 
-    matched = app.search("Kristoffer Nordmann", rows, headers, family_ranges(headers))
+    matched = app.search("Bob Smith", rows, headers, family_ranges(headers))
 
     out = capsys.readouterr().out
     assert matched == 0
-    assert 'No orders found matching "Kristoffer Nordmann"' in out
+    assert 'No orders found matching "Bob Smith"' in out
 
 
 def test_search_reports_multiple_matches(capsys: pytest.CaptureFixture[str]) -> None:
     headers = CONTACT_HEADERS + WISP_FAMILY_HEADERS
     rows = [
-        ("S1", "R1", "t1", "Kari Bergheim Lien", "a@example.com", "1", "no", "", "", "", "", "", "", ""),
-        ("S2", "R2", "t2", "Ola Fjell Berg", "b@example.com", "2", "yes", "1", "M", "", "", "", "", ""),
+        ("S1", "R1", "t1", "Kari Nordmann", "a@example.com", "1", "no", "", "", "", "", "", "", ""),
+        ("S2", "R2", "t2", "Ola Nordmann", "b@example.com", "2", "yes", "1", "M", "", "", "", "", ""),
     ]
     from transform_apparel_orders import family_ranges
 
-    matched = app.search("berg", rows, headers, family_ranges(headers))
+    matched = app.search("nordmann", rows, headers, family_ranges(headers))
 
     out = capsys.readouterr().out
     assert matched == 2
     assert "2 match(es)" in out
-    assert "Kari Bergheim Lien" in out
-    assert "Ola Fjell Berg" in out
+    assert "Kari Nordmann" in out
+    assert "Ola Nordmann" in out
 
 
 def test_main_one_shot_query_finds_person(
@@ -194,16 +194,16 @@ def test_main_one_shot_query_finds_person(
     make_person_csv(
         source,
         [
-            ("S1", "R1", "2026-09-25 20:52:25", "Kåre Søreide", "kare@example.com", "111", "yes", "1", "L", "Søreide", "KS", "9", "", ""),
+            ("S1", "R1", "2026-09-25 20:52:25", "Åse Nordmann", "ase@example.com", "111", "yes", "1", "L", "Nordmann", "ÅN", "9", "", ""),
         ],
         WISP_FAMILY_HEADERS,
     )
-    monkeypatch.setattr(sys, "argv", ["lookup_order.py", "--input", str(source), "soreide"])
+    monkeypatch.setattr(sys, "argv", ["lookup_order.py", "--input", str(source), "ase"])
 
     app.main()
 
     out = capsys.readouterr().out
-    assert "Kåre Søreide" in out
+    assert "Åse Nordmann" in out
     assert "Total garments: 1" in out
 
 
@@ -216,12 +216,12 @@ def test_main_one_shot_query_reports_no_match(
         [("S1", "R1", "t", "Someone Else", "e@example.com", "1", "no", "", "", "", "", "", "", "")],
         WISP_FAMILY_HEADERS,
     )
-    monkeypatch.setattr(sys, "argv", ["lookup_order.py", "--input", str(source), "Kristoffer Nordmann"])
+    monkeypatch.setattr(sys, "argv", ["lookup_order.py", "--input", str(source), "Bob Smith"])
 
     app.main()
 
     out = capsys.readouterr().out
-    assert 'No orders found matching "Kristoffer Nordmann"' in out
+    assert 'No orders found matching "Bob Smith"' in out
 
 
 def test_main_interactive_loop_reads_until_blank_line(
@@ -231,19 +231,19 @@ def test_main_interactive_loop_reads_until_blank_line(
     make_person_csv(
         source,
         [
-            ("S1", "R1", "t", "Ola Fjell Berg", "n@example.com", "1", "yes", "1", "M", "", "", "", "", ""),
+            ("S1", "R1", "t", "Ola Nordmann", "n@example.com", "1", "yes", "1", "M", "", "", "", "", ""),
         ],
         WISP_FAMILY_HEADERS,
     )
     monkeypatch.setattr(sys, "argv", ["lookup_order.py", "--input", str(source)])
-    responses = iter(["berg", ""])
+    responses = iter(["nordmann", ""])
     monkeypatch.setattr("builtins.input", lambda prompt="": next(responses))
 
     app.main()
 
     out = capsys.readouterr().out
     assert "Order lookup" in out
-    assert "Ola Fjell Berg" in out
+    assert "Ola Nordmann" in out
 
 
 def test_main_interactive_loop_exits_on_keyboard_interrupt(
@@ -268,7 +268,7 @@ def test_print_order_shows_discounted_clothing_and_print_costs(
 ) -> None:
     headers = CONTACT_HEADERS + WISP_FAMILY_HEADERS
     row = (
-        "S1", "R1", "2026-09-17 21:36:29", "Ola Fjell Berg", "ola@example.com",
+        "S1", "R1", "2026-09-17 21:36:29", "Ola Nordmann", "ola@example.com",
         "4700000001", "yes", "2", "M", "BACK", "IN", "8", "", "1",
     )
     lines = app.order_lines(row, headers, family_ranges(headers))
