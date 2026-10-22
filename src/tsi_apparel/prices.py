@@ -14,7 +14,7 @@ from __future__ import annotations
 import argparse
 from decimal import Decimal
 
-from .transform import PRODUCT_CATEGORIES
+from .transform import PRODUCT_CATEGORIES, standardize_size
 
 CLOTHING_DISCOUNT = Decimal("0.50")
 
@@ -39,8 +39,6 @@ LIST_PRICES = {
     "acrux": Decimal("429"),
     "round socks evo": Decimal("189"),
     "fixed socks": Decimal("169"),
-    "trip": Decimal("999"),
-    "rookie": Decimal("1099"),
     "academy evo": Decimal("751"),
     "pepper": Decimal("292"),
     "metel": Decimal("199"),
@@ -48,6 +46,13 @@ LIST_PRICES = {
     "rivet": Decimal("249"),
     "barrier": Decimal("499"),
     "poplar": Decimal("989"),
+}
+
+# Products whose list price depends on the size ordered. A size not listed
+# here (or no size at all) has no price, rather than a guessed one.
+SIZE_LIST_PRICES = {
+    "rookie": {"M": Decimal("899"), "L": Decimal("1099")},
+    "trip": {"M": Decimal("999"), "L": Decimal("1099")},
 }
 
 PRINT_PRICES = {
@@ -65,12 +70,20 @@ PRINT_ARTICLES = {
 }
 
 
-def garment_unit_price(product: str) -> Decimal | None:
-    """Discounted price for one garment, or None when the product is unpriced."""
-    list_price = LIST_PRICES.get(" ".join(product.split()).casefold())
-    if list_price is None:
+def list_price(product: str, size: str = "") -> Decimal | None:
+    """Undiscounted price for one garment, or None when it has no price."""
+    key = " ".join(product.split()).casefold()
+    if key in SIZE_LIST_PRICES:
+        return SIZE_LIST_PRICES[key].get(standardize_size(size))
+    return LIST_PRICES.get(key)
+
+
+def garment_unit_price(product: str, size: str = "") -> Decimal | None:
+    """Discounted price for one garment, or None when it has no price."""
+    price = list_price(product, size)
+    if price is None:
         return None
-    return list_price * (1 - CLOTHING_DISCOUNT)
+    return price * (1 - CLOTHING_DISCOUNT)
 
 
 def format_nok(amount: Decimal) -> str:
@@ -99,12 +112,14 @@ def run(arguments: argparse.Namespace) -> None:
         header_row += (f"Price (-{CLOTHING_DISCOUNT:.0%})",)
     print(price_row(header_row))
     for product, category in PRODUCT_CATEGORIES.items():
-        list_price = LIST_PRICES.get(product)
-        cells = (product.title(), category, format_nok(list_price) if list_price else "-")
-        if not arguments.list:
-            unit_price = garment_unit_price(product)
-            cells += (format_nok(unit_price) if unit_price else "-",)
-        print(price_row(cells))
+        for size in SIZE_LIST_PRICES.get(product, {"": None}):
+            price = list_price(product, size)
+            name = f"{product.title()} {size}".strip()
+            cells = (name, category, format_nok(price) if price else "-")
+            if not arguments.list:
+                unit_price = garment_unit_price(product, size)
+                cells += (format_nok(unit_price) if unit_price else "-",)
+            print(price_row(cells))
     if arguments.list:
         return
     print()
