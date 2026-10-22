@@ -301,23 +301,38 @@ def test_print_order_can_exclude_print_costs_or_hide_prices(
     assert "kr" not in out and "Total garments: 1" in out
 
 
+ROOKIE_FAMILY_HEADERS = [
+    "Order Rookie",
+    "Rookie Size",
+    "Rookie Black Quantity",
+    "Rookie Initials",
+    "Rookie Initials Quantity",
+]
+
+
 def test_initials_on_bags_are_charged_as_a_transfer_print(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    headers = CONTACT_HEADERS + [
-        "Order Rookie",
-        "Rookie Size",
-        "Rookie Black Quantity",
-        "Rookie Initials",
-        "Rookie Initials Quantity",
-    ]
-    row = ("S1", "R1", "t", "Kari Nordmann", "kari@example.com", "1", "Yes", "", "1", "KN", "")
+    headers = CONTACT_HEADERS + ROOKIE_FAMILY_HEADERS
+    row = ("S1", "R1", "t", "Kari Nordmann", "kari@example.com", "1", "Yes", "L", "1", "KN", "")
     lines = app.order_lines(row, headers, family_ranges(headers))
 
     app.print_order(row, headers, lines)
 
     out = capsys.readouterr().out
-    # Rookie 1099 / 2 = 549.50, plus one initials transfer at 49.60.
+    # Rookie L 1099 / 2 = 549.50, plus one initials transfer at 49.60.
     assert "Clothing: 549.50 kr" in out
     assert "Prints:   49.60 kr" in out
     assert "Total:    599.10 kr" in out
+
+
+def test_bag_without_size_is_left_out_of_total(capsys: pytest.CaptureFixture[str]) -> None:
+    headers = CONTACT_HEADERS + ROOKIE_FAMILY_HEADERS
+    row = ("S1", "R1", "t", "Bob Smith", "bob@example.com", "1", "Yes", "", "1", "", "")
+    lines = app.order_lines(row, headers, family_ranges(headers))
+
+    app.print_order(row, headers, lines)
+
+    out = capsys.readouterr().out
+    assert "Total:    0.00 kr" in out
+    assert "(no price for Rookie (no size); not included in total)" in out

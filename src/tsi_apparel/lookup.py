@@ -164,11 +164,11 @@ def print_order(
             str(number),
         )
         if show_prices:
-            unit_price = garment_unit_price(str(line["product"]))
+            unit_price = garment_unit_price(str(line["product"]), str(line["size"]))
             line_prints = print_cost(line) if include_print_costs else Decimal(0)
             prints_cost += line_prints
             if unit_price is None:
-                unpriced.append(str(line["product"]))
+                unpriced.append(f"{line['product']} {line['size'] or '(no size)'}")
                 cells += ("?",)
             else:
                 line_clothing = unit_price * int(line["quantity"])
