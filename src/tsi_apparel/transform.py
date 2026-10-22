@@ -454,6 +454,8 @@ def _load_source(input_path: Path) -> tuple[pl.DataFrame, list[str], list[Family
             infer_schema=False,
             truncate_ragged_lines=False,
         )
+        # Form answers often carry stray leading/trailing spaces; trim them once here.
+        .with_columns(pl.all().str.strip_chars())
         .collect()
         .fill_null("")
     )
