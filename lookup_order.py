@@ -2,14 +2,14 @@
 """Look up a person's order from apparel_order.csv for pickup-desk use.
 
 Usage:
-    python3 lookup_order.py                 # interactive: keeps prompting
-    python3 lookup_order.py "berg"          # one-shot search, then exit
-    python3 lookup_order.py --input other.csv "berg"
-    python3 lookup_order.py --no-print-costs "berg"   # garments only
-    python3 lookup_order.py --hide-prices "berg"      # no prices at all
+    python3 lookup_order.py                                # interactive: keeps prompting
+    python3 lookup_order.py "nordmann"                     # one-shot search, then exit
+    python3 lookup_order.py --input other.csv "nordmann"
+    python3 lookup_order.py --no-print-costs "nordmann"    # garments only
+    python3 lookup_order.py --hide-prices "nordmann"       # no prices at all
 
 Matches on name, email, or phone number (partial, case- and
-diacritic-insensitive, so "soreide" finds "Søreide").
+diacritic-insensitive, so "ase" finds "Åse").
 """
 
 from __future__ import annotations
