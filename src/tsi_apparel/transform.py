@@ -657,19 +657,23 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         "input_path", nargs="?", help="Form answers CSV (positional form of --input)"
     )
     parser.add_argument(
-        "template_path", nargs="?", help="Order sheet template (positional form of --template)"
+        "template_path",
+        nargs="?",
+        help="Order sheet template (positional form of --template)",
     )
     parser.add_argument(
-        "output_path", nargs="?", help="Where to write the result (positional form of --output)"
+        "output_path",
+        nargs="?",
+        help="Where to write the result (positional form of --output)",
+    )
+    parser.add_argument("--input", help="Form answers CSV (default: apparel_order.csv)")
+    parser.add_argument(
+        "--template",
+        help="Order sheet template (default: the bundled order_schema.csv)",
     )
     parser.add_argument(
-        "--input", help="Form answers CSV (default: apparel_order.csv)"
-    )
-    parser.add_argument(
-        "--template", help="Order sheet template (default: the bundled order_schema.csv)"
-    )
-    parser.add_argument(
-        "--output", help="Where to write the result (default: populated_order_schema.csv)"
+        "--output",
+        help="Where to write the result (default: populated_order_schema.csv)",
     )
     parser.add_argument(
         "--category",

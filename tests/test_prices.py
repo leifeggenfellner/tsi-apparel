@@ -37,13 +37,17 @@ def test_garment_unit_price_applies_discount() -> None:
         ("Trip", "XL", None),
     ],
 )
-def test_bag_prices_depend_on_size(product: str, size: str, expected: Decimal | None) -> None:
+def test_bag_prices_depend_on_size(
+    product: str, size: str, expected: Decimal | None
+) -> None:
     assert prices.garment_unit_price(product, size) == expected
 
 
 def test_every_product_has_a_price_and_no_price_is_orphaned() -> None:
     assert set(prices.LIST_PRICES).isdisjoint(prices.SIZE_LIST_PRICES)
-    assert set(prices.LIST_PRICES) | set(prices.SIZE_LIST_PRICES) == set(PRODUCT_CATEGORIES)
+    assert set(prices.LIST_PRICES) | set(prices.SIZE_LIST_PRICES) == set(
+        PRODUCT_CATEGORIES
+    )
     assert set(prices.PRINT_ARTICLES) == set(prices.PRINT_PRICES)
 
 
@@ -60,7 +64,10 @@ def test_prices_lists_every_product_with_discounted_price(
     assert rows["Barrier"].endswith("499.00 kr     249.50 kr")
     assert rows["Rookie M"].endswith("899.00 kr     449.50 kr")
     assert rows["Trip L"].endswith("1 099.00 kr     549.50 kr")
-    assert any("Montering tall rygg K Transfermerke" in line and "50.40 kr" in line for line in lines)
+    assert any(
+        "Montering tall rygg K Transfermerke" in line and "50.40 kr" in line
+        for line in lines
+    )
     assert all(line == line.rstrip() for line in lines)
 
 
@@ -71,5 +78,7 @@ def test_prices_list_flag_shows_list_prices_only(
 
     assert "Price (-50%)" not in lines[0]
     assert len(lines) == len(PRICE_ROW_NAMES) + 1
-    assert any(line.startswith("Fenders") and line.endswith("1 399.00 kr") for line in lines)
+    assert any(
+        line.startswith("Fenders") and line.endswith("1 399.00 kr") for line in lines
+    )
     assert not any("Transfermerke" in line for line in lines)

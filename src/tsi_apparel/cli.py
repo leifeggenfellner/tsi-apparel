@@ -25,7 +25,9 @@ def build_parser() -> argparse.ArgumentParser:
         description=transform.__doc__,
     )
     transform.add_arguments(convert_parser)
-    convert_parser.set_defaults(handler=lambda args: transform.run(args, convert_parser))
+    convert_parser.set_defaults(
+        handler=lambda args: transform.run(args, convert_parser)
+    )
 
     lookup_parser = commands.add_parser(
         "lookup",
