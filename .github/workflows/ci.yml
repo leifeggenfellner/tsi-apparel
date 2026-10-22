@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
+
+      # Pinned tool versions from requirements.txt, plus the package itself,
+      # so the build and the `apparel` entry point are exercised too.
+      - name: Install
+        run: python -m pip install -r requirements.txt .
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Test
+        run: pytest -q
+
+      - name: Smoke test installed CLI
+        run: |
+          apparel --version
+          apparel help convert > /dev/null
+          apparel prices --list > /dev/null
+
+  no-order-data:
+    name: No order data committed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Order CSVs hold personal data; only the blank template may be tracked.
+      - name: Check tracked CSV files
+        run: |
+          unexpected=$(git ls-files '*.csv' ':!:src/tsi_apparel/data/order_schema.csv')
+          if [ -n "$unexpected" ]; then
+            echo "::error::CSV files must not be committed (they may contain personal data):"
+            echo "$unexpected"
+            exit 1
+          fi
