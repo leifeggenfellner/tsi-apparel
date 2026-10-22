@@ -24,7 +24,7 @@ def test_no_command_prints_overview(capsys: pytest.CaptureFixture[str]) -> None:
     cli.main([])
     out = capsys.readouterr().out
     assert "usage: apparel" in out
-    assert "convert" in out and "lookup" in out and "help" in out
+    assert all(command in out for command in ("convert", "lookup", "prices", "help"))
 
 
 def test_version(capsys: pytest.CaptureFixture[str]) -> None:
@@ -34,7 +34,7 @@ def test_version(capsys: pytest.CaptureFixture[str]) -> None:
     assert capsys.readouterr().out.strip() == f"apparel {__version__}"
 
 
-@pytest.mark.parametrize("command", ["convert", "lookup"])
+@pytest.mark.parametrize("command", ["convert", "lookup", "prices"])
 def test_help_command_matches_command_help(
     command: str, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -77,3 +77,10 @@ def test_convert_command_uses_bundled_template(
 
     assert (tmp_path / "populated_order_schema.csv").exists()
     assert "2 garments, 0 print rows" in capsys.readouterr().out
+
+
+def test_prices_command(capsys: pytest.CaptureFixture[str]) -> None:
+    cli.main(["prices", "--list"])
+    out = capsys.readouterr().out
+    assert out.startswith("Product")
+    assert "Wyvern Kit" in out and "999.00 kr" in out
