@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tsi-apparel"
+dynamic = ["version"]
+description = "Order tools for TSI Volleyball apparel: convert form answers to the supplier order sheet, look up orders and costs"
+requires-python = ">=3.12"
+dependencies = ["polars>=1.40"]
+
+[project.optional-dependencies]
+dev = ["pytest>=9", "ruff>=0.15"]
+
+[project.scripts]
+apparel = "tsi_apparel.cli:main"
+
+[tool.hatch.version]
+path = "src/tsi_apparel/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tsi_apparel"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
