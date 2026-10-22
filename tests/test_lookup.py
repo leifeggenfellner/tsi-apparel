@@ -13,7 +13,14 @@ def write_csv(path: Path, rows: list[list[str]]) -> None:
         csv.writer(file, lineterminator="\n").writerows(rows)
 
 
-CONTACT_HEADERS = ["Submission ID", "Respondent ID", "Submitted at", "Full Name", "Email", "Phone Number"]
+CONTACT_HEADERS = [
+    "Submission ID",
+    "Respondent ID",
+    "Submitted at",
+    "Full Name",
+    "Email",
+    "Phone Number",
+]
 WISP_FAMILY_HEADERS = [
     "Order Wisp Black",
     "Wisp Black Quantity",
@@ -32,7 +39,9 @@ POPLAR_FAMILY_HEADERS = [
 ]
 
 
-def make_person_csv(path: Path, rows: list[list[str]], extra_headers: list[str]) -> None:
+def make_person_csv(
+    path: Path, rows: list[list[str]], extra_headers: list[str]
+) -> None:
     write_csv(path, [CONTACT_HEADERS + extra_headers, *rows])
 
 
@@ -53,8 +62,20 @@ def test_fold(value: str, expected: str) -> None:
 def test_order_lines_extracts_single_family_line() -> None:
     headers = CONTACT_HEADERS + WISP_FAMILY_HEADERS
     row = (
-        "S1", "R1", "2026-09-17 10:00:00", "Ola Nordmann", "ola@example.com", "4700000000",
-        "yes", "2", "M", "BACK", "IN", "8", "9", "1",
+        "S1",
+        "R1",
+        "2026-09-17 10:00:00",
+        "Ola Nordmann",
+        "ola@example.com",
+        "4700000000",
+        "yes",
+        "2",
+        "M",
+        "BACK",
+        "IN",
+        "8",
+        "9",
+        "1",
     )
     from tsi_apparel.transform import family_ranges
 
@@ -81,19 +102,50 @@ def test_order_lines_extracts_single_family_line() -> None:
 
 def test_order_lines_handles_poplar_dual_color_columns() -> None:
     headers = CONTACT_HEADERS + POPLAR_FAMILY_HEADERS
-    row = ("S1", "R1", "2026-09-17 10:00:00", "Someone", "s@example.com", "1", "yes", "1", "2", "M")
+    row = (
+        "S1",
+        "R1",
+        "2026-09-17 10:00:00",
+        "Someone",
+        "s@example.com",
+        "1",
+        "yes",
+        "1",
+        "2",
+        "M",
+    )
     from tsi_apparel.transform import family_ranges
 
     lines = app.order_lines(row, headers, family_ranges(headers))
 
-    assert {(line["color"], line["quantity"]) for line in lines} == {("Black", 1), ("White", 2)}
+    assert {(line["color"], line["quantity"]) for line in lines} == {
+        ("Black", 1),
+        ("White", 2),
+    }
     assert all(line["name_prints"] == line["initials_prints"] == 0 for line in lines)
-    assert all(line["product"] == "Poplar" and line["category"] == "Annet" for line in lines)
+    assert all(
+        line["product"] == "Poplar" and line["category"] == "Annet" for line in lines
+    )
 
 
 def test_order_lines_skips_zero_quantity_families() -> None:
     headers = CONTACT_HEADERS + WISP_FAMILY_HEADERS
-    row = ("S1", "R1", "2026-09-17 10:00:00", "Nobody", "n@example.com", "1", "no", "", "", "", "", "", "", "")
+    row = (
+        "S1",
+        "R1",
+        "2026-09-17 10:00:00",
+        "Nobody",
+        "n@example.com",
+        "1",
+        "no",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+    )
     from tsi_apparel.transform import family_ranges
 
     assert app.order_lines(row, headers, family_ranges(headers)) == []
@@ -112,15 +164,44 @@ def test_order_lines_skips_zero_quantity_families() -> None:
 def test_matches_query_checks_name_email_and_phone(query: str, expected: bool) -> None:
     headers = CONTACT_HEADERS + WISP_FAMILY_HEADERS
     row = (
-        "S1", "R1", "2026-09-25 20:52:25", "Åse Nordmann", "ase.nordmann@example.com",
-        "4700000002", "no", "", "", "", "", "", "", "",
+        "S1",
+        "R1",
+        "2026-09-25 20:52:25",
+        "Åse Nordmann",
+        "ase.nordmann@example.com",
+        "4700000002",
+        "no",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
     )
     assert app.matches_query(row, headers, query) is expected
 
 
-def test_print_order_reports_no_items_when_no_lines(capsys: pytest.CaptureFixture[str]) -> None:
+def test_print_order_reports_no_items_when_no_lines(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     headers = CONTACT_HEADERS + WISP_FAMILY_HEADERS
-    row = ("S1", "R1", "2026-09-17 10:00:00", "Nobody", "n@example.com", "1", "no", "", "", "", "", "", "", "")
+    row = (
+        "S1",
+        "R1",
+        "2026-09-17 10:00:00",
+        "Nobody",
+        "n@example.com",
+        "1",
+        "no",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+    )
 
     app.print_order(row, headers, [])
 
@@ -132,8 +213,20 @@ def test_print_order_reports_no_items_when_no_lines(capsys: pytest.CaptureFixtur
 def test_print_order_lists_items_and_total(capsys: pytest.CaptureFixture[str]) -> None:
     headers = CONTACT_HEADERS + WISP_FAMILY_HEADERS
     row = (
-        "S1", "R1", "2026-09-17 21:36:29", "Ola Nordmann", "ola@example.com",
-        "4700000001", "yes", "2", "M", "BACK", "IN", "8", "9", "1",
+        "S1",
+        "R1",
+        "2026-09-17 21:36:29",
+        "Ola Nordmann",
+        "ola@example.com",
+        "4700000001",
+        "yes",
+        "2",
+        "M",
+        "BACK",
+        "IN",
+        "8",
+        "9",
+        "1",
     )
     lines = [
         {
@@ -160,7 +253,24 @@ def test_print_order_lists_items_and_total(capsys: pytest.CaptureFixture[str]) -
 
 def test_search_reports_no_match(capsys: pytest.CaptureFixture[str]) -> None:
     headers = CONTACT_HEADERS + WISP_FAMILY_HEADERS
-    rows = [("S1", "R1", "t", "Someone Else", "e@example.com", "1", "no", "", "", "", "", "", "", "")]
+    rows = [
+        (
+            "S1",
+            "R1",
+            "t",
+            "Someone Else",
+            "e@example.com",
+            "1",
+            "no",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+        )
+    ]
     from tsi_apparel.transform import family_ranges
 
     matched = app.search("Bob Smith", rows, headers, family_ranges(headers))
@@ -173,8 +283,38 @@ def test_search_reports_no_match(capsys: pytest.CaptureFixture[str]) -> None:
 def test_search_reports_multiple_matches(capsys: pytest.CaptureFixture[str]) -> None:
     headers = CONTACT_HEADERS + WISP_FAMILY_HEADERS
     rows = [
-        ("S1", "R1", "t1", "Kari Nordmann", "a@example.com", "1", "no", "", "", "", "", "", "", ""),
-        ("S2", "R2", "t2", "Ola Nordmann", "b@example.com", "2", "yes", "1", "M", "", "", "", "", ""),
+        (
+            "S1",
+            "R1",
+            "t1",
+            "Kari Nordmann",
+            "a@example.com",
+            "1",
+            "no",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+        ),
+        (
+            "S2",
+            "R2",
+            "t2",
+            "Ola Nordmann",
+            "b@example.com",
+            "2",
+            "yes",
+            "1",
+            "M",
+            "",
+            "",
+            "",
+            "",
+            "",
+        ),
     ]
     from tsi_apparel.transform import family_ranges
 
@@ -194,7 +334,22 @@ def test_main_one_shot_query_finds_person(
     make_person_csv(
         source,
         [
-            ("S1", "R1", "2026-09-25 20:52:25", "Åse Nordmann", "ase@example.com", "111", "yes", "1", "L", "Nordmann", "ÅN", "9", "", ""),
+            (
+                "S1",
+                "R1",
+                "2026-09-25 20:52:25",
+                "Åse Nordmann",
+                "ase@example.com",
+                "111",
+                "yes",
+                "1",
+                "L",
+                "Nordmann",
+                "ÅN",
+                "9",
+                "",
+                "",
+            ),
         ],
         WISP_FAMILY_HEADERS,
     )
@@ -213,10 +368,29 @@ def test_main_one_shot_query_reports_no_match(
     source = tmp_path / "orders.csv"
     make_person_csv(
         source,
-        [("S1", "R1", "t", "Someone Else", "e@example.com", "1", "no", "", "", "", "", "", "", "")],
+        [
+            (
+                "S1",
+                "R1",
+                "t",
+                "Someone Else",
+                "e@example.com",
+                "1",
+                "no",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+            )
+        ],
         WISP_FAMILY_HEADERS,
     )
-    monkeypatch.setattr(sys, "argv", ["lookup_order.py", "--input", str(source), "Bob Smith"])
+    monkeypatch.setattr(
+        sys, "argv", ["lookup_order.py", "--input", str(source), "Bob Smith"]
+    )
 
     app.main()
 
@@ -231,7 +405,22 @@ def test_main_interactive_loop_reads_until_blank_line(
     make_person_csv(
         source,
         [
-            ("S1", "R1", "t", "Ola Nordmann", "n@example.com", "1", "yes", "1", "M", "", "", "", "", ""),
+            (
+                "S1",
+                "R1",
+                "t",
+                "Ola Nordmann",
+                "n@example.com",
+                "1",
+                "yes",
+                "1",
+                "M",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ),
         ],
         WISP_FAMILY_HEADERS,
     )
@@ -268,8 +457,20 @@ def test_print_order_shows_discounted_clothing_and_print_costs(
 ) -> None:
     headers = CONTACT_HEADERS + WISP_FAMILY_HEADERS
     row = (
-        "S1", "R1", "2026-09-17 21:36:29", "Ola Nordmann", "ola@example.com",
-        "4700000001", "yes", "2", "M", "BACK", "IN", "8", "", "1",
+        "S1",
+        "R1",
+        "2026-09-17 21:36:29",
+        "Ola Nordmann",
+        "ola@example.com",
+        "4700000001",
+        "yes",
+        "2",
+        "M",
+        "BACK",
+        "IN",
+        "8",
+        "",
+        "1",
     )
     lines = app.order_lines(row, headers, family_ranges(headers))
 
@@ -287,7 +488,20 @@ def test_print_order_can_exclude_print_costs_or_hide_prices(
 ) -> None:
     headers = CONTACT_HEADERS + WISP_FAMILY_HEADERS
     row = (
-        "S1", "R1", "t", "Someone", "s@example.com", "1", "yes", "1", "M", "BACK", "", "", "", "",
+        "S1",
+        "R1",
+        "t",
+        "Someone",
+        "s@example.com",
+        "1",
+        "yes",
+        "1",
+        "M",
+        "BACK",
+        "",
+        "",
+        "",
+        "",
     )
     lines = app.order_lines(row, headers, family_ranges(headers))
 
@@ -314,7 +528,19 @@ def test_initials_on_bags_are_charged_as_a_transfer_print(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     headers = CONTACT_HEADERS + ROOKIE_FAMILY_HEADERS
-    row = ("S1", "R1", "t", "Kari Nordmann", "kari@example.com", "1", "Yes", "L", "1", "KN", "")
+    row = (
+        "S1",
+        "R1",
+        "t",
+        "Kari Nordmann",
+        "kari@example.com",
+        "1",
+        "Yes",
+        "L",
+        "1",
+        "KN",
+        "",
+    )
     lines = app.order_lines(row, headers, family_ranges(headers))
 
     app.print_order(row, headers, lines)
@@ -326,7 +552,9 @@ def test_initials_on_bags_are_charged_as_a_transfer_print(
     assert "Total:    599.10 kr" in out
 
 
-def test_bag_without_size_is_left_out_of_total(capsys: pytest.CaptureFixture[str]) -> None:
+def test_bag_without_size_is_left_out_of_total(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     headers = CONTACT_HEADERS + ROOKIE_FAMILY_HEADERS
     row = ("S1", "R1", "t", "Bob Smith", "bob@example.com", "1", "Yes", "", "1", "", "")
     lines = app.order_lines(row, headers, family_ranges(headers))

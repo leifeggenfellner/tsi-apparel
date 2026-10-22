@@ -198,7 +198,10 @@ def test_load_source_trims_every_value(tmp_path: Path) -> None:
     source = tmp_path / "source.csv"
     write_csv(
         source,
-        [["Full Name", *basic_headers()], [" Ola Nordmann  ", " yes", "1 ", "  M", "", "", "", "", ""]],
+        [
+            ["Full Name", *basic_headers()],
+            [" Ola Nordmann  ", " yes", "1 ", "  M", "", "", "", "", ""],
+        ],
     )
 
     frame, _, _ = app._load_source(source)

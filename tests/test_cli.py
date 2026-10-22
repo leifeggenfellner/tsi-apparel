@@ -6,8 +6,19 @@ import pytest
 from tsi_apparel import __version__, cli
 from tsi_apparel.transform import DEFAULT_TEMPLATE
 
-CONTACT_HEADERS = ["Submission ID", "Respondent ID", "Submitted at", "Full Name", "Email", "Phone Number"]
-SOCK_HEADERS = ["Order Round Socks Evo White", "Round Socks Evo White Size", "Round Socks Evo White Quantity"]
+CONTACT_HEADERS = [
+    "Submission ID",
+    "Respondent ID",
+    "Submitted at",
+    "Full Name",
+    "Email",
+    "Phone Number",
+]
+SOCK_HEADERS = [
+    "Order Round Socks Evo White",
+    "Round Socks Evo White Size",
+    "Round Socks Evo White Quantity",
+]
 
 
 def write_orders(path: Path) -> None:
@@ -15,7 +26,17 @@ def write_orders(path: Path) -> None:
         csv.writer(file, lineterminator="\n").writerows(
             [
                 CONTACT_HEADERS + SOCK_HEADERS,
-                ["S1", "R1", "t", "Ola Nordmann", "ola@example.com", "4700000001", "Yes", "M", "2"],
+                [
+                    "S1",
+                    "R1",
+                    "t",
+                    "Ola Nordmann",
+                    "ola@example.com",
+                    "4700000001",
+                    "Yes",
+                    "M",
+                    "2",
+                ],
             ]
         )
 

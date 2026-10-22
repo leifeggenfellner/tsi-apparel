@@ -90,13 +90,17 @@ def order_lines(
                     "back_number": fields.get("back_number") or "",
                     "front_number": fields.get("front_number") or "",
                     "name_prints": print_count(
-                        fields["back_text_quantity"], quantity, bool(fields["back_text"])
+                        fields["back_text_quantity"],
+                        quantity,
+                        bool(fields["back_text"]),
                     ),
                     "initials_prints": print_count(
                         fields["initials_quantity"], quantity, bool(fields["initials"])
                     ),
                     "back_number_prints": number_prints if fields["back_number"] else 0,
-                    "front_number_prints": number_prints if fields["front_number"] else 0,
+                    "front_number_prints": number_prints
+                    if fields["front_number"]
+                    else 0,
                 }
             )
     return lines
@@ -144,10 +148,7 @@ def print_order(
     if show_prices:
         header_row += ("Price",)
         widths.append(12)
-    print(
-        "  "
-        + "".join(text.ljust(width) for text, width in zip(header_row, widths))
-    )
+    print("  " + "".join(text.ljust(width) for text, width in zip(header_row, widths)))
     total = 0
     clothing_cost = Decimal(0)
     prints_cost = Decimal(0)
@@ -184,7 +185,9 @@ def print_order(
         print(f"  Prints:   {format_nok(prints_cost)}")
     print(f"  Total:    {format_nok(clothing_cost + prints_cost)}")
     if unpriced:
-        print(f"  (no price for {', '.join(sorted(set(unpriced)))}; not included in total)")
+        print(
+            f"  (no price for {', '.join(sorted(set(unpriced)))}; not included in total)"
+        )
 
 
 def search(
@@ -215,7 +218,9 @@ def search(
 def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("query", nargs="?", help="Name, email, or phone to search for")
     parser.add_argument(
-        "--input", default="apparel_order.csv", help="Source order CSV (default: %(default)s)"
+        "--input",
+        default="apparel_order.csv",
+        help="Source order CSV (default: %(default)s)",
     )
     parser.add_argument(
         "--no-print-costs",
