@@ -7,7 +7,7 @@
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
-      python = pkgs.python312.withPackages (pythonPackages: with pythonPackages; [
+      python = pkgs.python315.withPackages (pythonPackages: with pythonPackages; [
         pip
         polars
         pytest

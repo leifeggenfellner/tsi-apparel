@@ -26,6 +26,8 @@ When releasing, rename **Unreleased** to the new version and date, bump
 - README with installation, usage, prices and form format (#14).
 
 ### Changed
+- Python 3.15 or newer is now required, up from 3.12. The Nix dev shell uses
+  Python 3.15 too.
 - `convert` uses the bundled order sheet template by default, so it works from
   any directory (#7).
 - Form values are trimmed of stray leading and trailing spaces when the
