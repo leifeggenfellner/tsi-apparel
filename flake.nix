@@ -7,7 +7,14 @@
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
-      python = pkgs.python315.withPackages (pythonPackages: with pythonPackages; [
+      python315 = pkgs.python315.override {
+        packageOverrides = _: super: {
+          # mypyc's tests build with -Werror, which trips on a _POSIX_C_SOURCE
+          # redefinition in 3.15's pyconfig.h. Pulled in via pip -> sphinx.
+          mypy = super.mypy.overridePythonAttrs (_: { doCheck = false; });
+        };
+      };
+      python = python315.withPackages (pythonPackages: with pythonPackages; [
         pip
         polars
         pytest
