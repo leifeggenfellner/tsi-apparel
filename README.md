@@ -178,3 +178,8 @@ ruff format .              # CI rejects unformatted code
 CI runs on every push to `main` and every pull request. It runs lint, the
 format check and the tests on Python 3.12 and 3.13, smoke-tests the installed
 CLI, and checks that no order data is committed.
+
+Every change that users notice gets an entry in [`CHANGELOG.md`](CHANGELOG.md)
+under **Unreleased**, in the same pull request. Update this README in that PR
+too whenever commands, flags, prices or the form format change. The pull
+request template has a checklist for both.
