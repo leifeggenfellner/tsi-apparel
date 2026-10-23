@@ -74,10 +74,22 @@ apparel lookup "nordmann"                     # one search, then exit
 apparel lookup --no-print-costs "nordmann"    # garment prices only, no transfer prints
 apparel lookup --hide-prices "nordmann"       # no prices at all
 apparel lookup --input other.csv "nordmann"
+apparel lookup --exact "smith"                # whole words: Bob Smith, not Alice Smithson
+apparel lookup --field phone --exact 91234567 # one field only; repeat --field for several
 ```
 
-Searches match name, email and phone number. Matching is partial and ignores
-case and accents, so `ase` finds *Åse*. Example output:
+By default, searches match any part of the name, email or phone number,
+ignoring case and accents, so `ase` finds *Åse*. Use `--exact` when that
+returns too many people:
+
+- **Names** match on whole words, in order. `smith` finds *Bob Smith* but not
+  *Alice Smithson*, and `nordmann` finds *Kari Berg-Nordmann*.
+- **Emails** match the whole address.
+- **Phone numbers** match the whole number, ignoring spaces and `+`. An 8-digit
+  number also matches without the country code, so `91234567` finds `4791234567`.
+
+`--field name|email|phone` limits the search to that field. It works with or
+without `--exact`, and can be repeated. Example output:
 
 ```
 1 match(es) for "nordmann":

@@ -564,3 +564,138 @@ def test_bag_without_size_is_left_out_of_total(
     out = capsys.readouterr().out
     assert "Total:    0.00 kr" in out
     assert "(no price for Rookie (no size); not included in total)" in out
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "query", "exact", "expected"),
+    [
+        # Partial matching (the default) finds any part.
+        ("name", "Alice Smithson", "smith", False, True),
+        ("phone", "4700000001", "0000", False, True),
+        # Exact names match whole words, in order, ignoring case and accents.
+        ("name", "Bob Smith", "smith", True, True),
+        ("name", "Alice Smithson", "smith", True, False),
+        ("name", "Åse Nordmann", "ase nordmann", True, True),
+        ("name", "Åse Nordmann", "nordmann ase", True, False),
+        ("name", "Kari Berg-Nordmann", "nordmann", True, True),
+        ("name", "  Ola   Nordmann ", "OLA", True, True),
+        ("name", "Ola Nordmann", "", True, False),
+        # Exact emails match the whole address only.
+        ("email", "ola@example.com", "OLA@example.com", True, True),
+        ("email", "ola@example.com", "ola", True, False),
+        # Exact phones ignore formatting and allow dropping the country code.
+        ("phone", "4791234567", "4791234567", True, True),
+        ("phone", "4791234567", "+47 912 34 567", True, True),
+        ("phone", "4791234567", "91234567", True, True),
+        ("phone", "4791234567", "1234567", True, False),
+        ("phone", "4791234567", "nordmann", True, False),
+    ],
+)
+def test_field_matches(
+    field: str, value: str, query: str, exact: bool, expected: bool
+) -> None:
+    assert app.field_matches(field, value, query, exact) is expected
+
+
+def test_matches_query_can_be_limited_to_fields() -> None:
+    headers = CONTACT_HEADERS + WISP_FAMILY_HEADERS
+    row = (
+        "S1",
+        "R1",
+        "t",
+        "Bob Smith",
+        "smith@example.com",
+        "4791234567",
+        "no",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+    )
+
+    assert app.matches_query(row, headers, "smith", fields=["email"])
+    assert not app.matches_query(row, headers, "smith", exact=True, fields=["email"])
+    assert app.matches_query(row, headers, "smith", exact=True, fields=["name"])
+    assert not app.matches_query(row, headers, "91234567", fields=["name", "email"])
+    assert app.matches_query(row, headers, "91234567", exact=True, fields=["phone"])
+
+
+def test_main_exact_and_field_flags(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    source = tmp_path / "orders.csv"
+    make_person_csv(
+        source,
+        [
+            [
+                "S1",
+                "R1",
+                "t",
+                "Bob Smith",
+                "bob@example.com",
+                "4791234567",
+                "no",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ],
+            [
+                "S2",
+                "R2",
+                "t",
+                "Alice Smithson",
+                "alice@example.com",
+                "4798765432",
+                "no",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ],
+        ],
+        WISP_FAMILY_HEADERS,
+    )
+
+    monkeypatch.setattr(
+        sys, "argv", ["apparel", "--input", str(source), "--exact", "smith"]
+    )
+    app.main()
+    out = capsys.readouterr().out
+    assert '1 match(es) for "smith"' in out
+    assert "Bob Smith" in out and "Alice Smithson" not in out
+
+    app.main(["--input", str(source), "--field", "phone", "--exact", "98765432"])
+    out = capsys.readouterr().out
+    assert "Alice Smithson" in out and "Bob Smith" not in out
+
+    app.main(["--input", str(source), "--field", "phone", "smith"])
+    assert 'No orders found matching "smith"' in capsys.readouterr().out
+
+
+def test_main_rejects_unknown_field(capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit) as error:
+        app.main(["--field", "address", "smith"])
+    assert error.value.code == 2
+    assert "invalid choice" in capsys.readouterr().err
+
+
+def test_interactive_prompt_describes_search_mode(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    source = tmp_path / "orders.csv"
+    make_person_csv(source, [], WISP_FAMILY_HEADERS)
+    monkeypatch.setattr("builtins.input", lambda _prompt: "")
+
+    app.main(["--input", str(source), "--exact", "--field", "name", "--field", "email"])
+
+    assert "Order lookup (exact match on name, email)" in capsys.readouterr().out
