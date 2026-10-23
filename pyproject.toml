@@ -6,6 +6,7 @@ build-backend = "hatchling.build"
 name = "tsi-apparel"
 dynamic = ["version"]
 description = "Order tools for TSI Volleyball apparel: convert form answers to the supplier order sheet, look up orders and costs"
+readme = "README.md"
 requires-python = ">=3.12"
 dependencies = ["polars>=1.40"]
 
