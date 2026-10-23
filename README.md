@@ -30,7 +30,7 @@ python -m venv .venv
 .venv/bin/pip install .
 ```
 
-Requires Python 3.12 or newer. On NixOS, `nix develop` provides Python, pip,
+Requires Python 3.15 or newer. On NixOS, `nix develop` provides Python, pip,
 pipx and ruff. Plain `pip install .` inside it fails, because the Nix Python is read-only.
 Use pipx or a venv as above.
 
@@ -175,9 +175,9 @@ ruff check .
 ruff format .              # CI rejects unformatted code
 ```
 
-CI runs on every push to `main` and every pull request. It runs lint, the
-format check and the tests on Python 3.12 and 3.13, smoke-tests the installed
-CLI, and checks that no order data is committed.
+CI runs on every push to `main` and every pull request, as three parallel
+jobs: lint and format check, the tests plus a smoke test of the installed CLI
+on Python 3.15, and a check that no order data is committed.
 
 Every change that users notice gets an entry in [`CHANGELOG.md`](CHANGELOG.md)
 under **Unreleased**, in the same pull request. Update this README in that PR
