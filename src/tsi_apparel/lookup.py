@@ -6,9 +6,13 @@ Usage:
     apparel lookup --input other.csv "nordmann"
     apparel lookup --no-print-costs "nordmann"    # garments only
     apparel lookup --hide-prices "nordmann"       # no prices at all
+    apparel lookup --exact "smith"                # whole words only: not "Smithson"
+    apparel lookup --field phone 47540643         # search phone numbers only
 
-Matches on name, email, or phone number (partial, case- and
-diacritic-insensitive, so "ase" finds "Åse").
+Matches on name, email, or phone number. Matching is partial by default and
+always case- and diacritic-insensitive, so "ase" finds "Åse". With --exact,
+names match on whole words, emails on the whole address, and phone numbers on
+the whole number (an 8-digit number also matches without its country code).
 """
 
 from __future__ import annotations
@@ -33,7 +37,8 @@ from .transform import (
     resolved_customization_quantity,
 )
 
-CONTACT_FIELDS = ("Full Name", "Email", "Phone Number")
+FIELD_COLUMNS = {"name": "Full Name", "email": "Email", "phone": "Phone Number"}
+CONTACT_FIELDS = tuple(FIELD_COLUMNS.values())
 FOLD_MAP = str.maketrans({"æ": "ae", "ø": "o", "å": "a"})
 
 
@@ -106,13 +111,42 @@ def order_lines(
     return lines
 
 
-def matches_query(row: tuple[str, ...], headers: list[str], query: str) -> bool:
-    folded_query = fold(query)
-    for field_name in CONTACT_FIELDS:
-        value = row[headers.index(field_name)]
-        if folded_query in fold(value):
-            return True
-    return False
+def name_words(text: str) -> list[str]:
+    return [word for word in re.split(r"[\s-]+", fold(text)) if word]
+
+
+def field_matches(field: str, value: str, query: str, exact: bool = False) -> bool:
+    if not exact:
+        return fold(query) in fold(value)
+    if field == "phone":
+        query_digits = re.sub(r"\D", "", query)
+        value_digits = re.sub(r"\D", "", value)
+        # Numbers are stored with country code (47...), but people give the
+        # 8-digit local number.
+        return bool(query_digits) and (
+            value_digits == query_digits
+            or (len(query_digits) >= 8 and value_digits.endswith(query_digits))
+        )
+    if field == "email":
+        return fold(value) == fold(query)
+    words, query_words = name_words(value), name_words(query)
+    return bool(query_words) and any(
+        words[start : start + len(query_words)] == query_words
+        for start in range(len(words) - len(query_words) + 1)
+    )
+
+
+def matches_query(
+    row: tuple[str, ...],
+    headers: list[str],
+    query: str,
+    exact: bool = False,
+    fields: list[str] | None = None,
+) -> bool:
+    return any(
+        field_matches(field, row[headers.index(FIELD_COLUMNS[field])], query, exact)
+        for field in fields or FIELD_COLUMNS
+    )
 
 
 def print_cost(line: dict) -> Decimal:
@@ -197,8 +231,14 @@ def search(
     families: list,
     show_prices: bool = True,
     include_print_costs: bool = True,
+    exact: bool = False,
+    fields: list[str] | None = None,
 ) -> int:
-    matched_rows = [row for row in source_rows if matches_query(row, headers, query)]
+    matched_rows = [
+        row
+        for row in source_rows
+        if matches_query(row, headers, query, exact=exact, fields=fields)
+    ]
     if not matched_rows:
         print(f'No orders found matching "{query}".')
         return 0
@@ -230,22 +270,39 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--hide-prices", action="store_true", help="Do not show any prices"
     )
+    parser.add_argument(
+        "--exact",
+        action="store_true",
+        help="Match whole words in names and whole emails or phone numbers, "
+        "instead of any part",
+    )
+    parser.add_argument(
+        "--field",
+        dest="fields",
+        action="append",
+        choices=list(FIELD_COLUMNS),
+        help="Only search this field; repeat to search several (default: all)",
+    )
 
 
 def run(arguments: argparse.Namespace) -> None:
-    price_options = {
+    search_options = {
         "show_prices": not arguments.hide_prices,
         "include_print_costs": not arguments.no_print_costs,
+        "exact": arguments.exact,
+        "fields": arguments.fields,
     }
 
     source, headers, families = _load_source(Path(arguments.input))
     source_rows = list(source.iter_rows())
 
     if arguments.query:
-        search(arguments.query, source_rows, headers, families, **price_options)
+        search(arguments.query, source_rows, headers, families, **search_options)
         return
 
-    print("Order lookup — type a name, email, or phone (blank line to quit).")
+    searched = ", ".join(arguments.fields or ("name", "email", "phone"))
+    mode = "exact" if arguments.exact else "partial"
+    print(f"Order lookup ({mode} match on {searched}) — blank line to quit.")
     while True:
         try:
             query = input("> ").strip()
@@ -254,7 +311,7 @@ def run(arguments: argparse.Namespace) -> None:
             break
         if not query:
             break
-        search(query, source_rows, headers, families, **price_options)
+        search(query, source_rows, headers, families, **search_options)
 
 
 def main(argv: list[str] | None = None) -> None:
