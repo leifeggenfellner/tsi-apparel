@@ -1,0 +1,72 @@
+$ apparel lookup --field email example.com
+5 match(es) for "example.com":
+
+Ola Nordmann
+  Email: ola@example.com   Phone: 4700000001   Submitted: 2026-09-17 10:00:00
+  Product             Color Size        Qty Initials Back print      Number Price       
+  Wyvern Kit          Black M           3   ON       NORDMANN        7      2 006.50 kr 
+  Wyvern Kit          White L           1            NORDMANN        7      679.10 kr   
+  Round Socks Evo     White L (43-46)   2                                   189.00 kr   
+  Poplar              Black M           1                                   494.50 kr   
+  Poplar              White M           1                                   494.50 kr   
+  Total garments: 8
+  Clothing: 3 176.00 kr
+  Prints:   687.60 kr
+  Total:    3 863.60 kr
+
+Kari Nordmann
+  Email: kari@example.com   Phone: 4700000002   Submitted: 2026-09-17 11:30:00
+  Product             Color Size        Qty Initials Back print      Number Price       
+  Wisp                Black S           2   KN       KARI                   867.40 kr   
+  Dryad               Black XS          1   KN                              384.10 kr   
+  Galax               Black M           1   KN                              199.10 kr   
+  Acrux               Black S           2   KN                              478.60 kr   
+  Desna               Black XL          1   KN                              399.10 kr   
+  Pepper              Black -           1   KN                              195.60 kr   
+  Metel               Black -           1                                   99.50 kr    
+  Blizzard            Black -           1                                   224.50 kr   
+  Rookie              Black L           1   KN                              599.10 kr   
+  Total garments: 11
+  Clothing: 2 951.00 kr
+  Prints:   496.00 kr
+  Total:    3 447.00 kr
+
+Bob Smith
+  Email: bob@example.com   Phone: 4700000003   Submitted: 2026-09-18 09:15:00
+  Product             Color Size        Qty Initials Back print      Number Price       
+  Poseidon            Black XXL         1   BS       SMITH                  648.30 kr   
+  Artemis             Black XL          1                                   499.50 kr   
+  Anduin              Black L           1            SMITH                  498.70 kr   
+  Anora               Black M           1                                   399.50 kr   
+  Fenders             Black 3XL         1   BS                              749.10 kr   
+  Northland           Black XL          1                                   1 999.50 kr 
+  Narvik              Black XS          1                                   1 149.50 kr 
+  Rivendell           Black S           1                                   624.50 kr   
+  Elbrus              Black M           1                                   499.50 kr   
+  Academy Evo         Black -           1   BS                              425.10 kr   
+  Trip                Black M           1   BS                              549.10 kr   
+  Total garments: 11
+  Clothing: 7 645.50 kr
+  Prints:   396.80 kr
+  Total:    8 042.30 kr
+
+Alice Smith
+  Email: alice@example.com   Phone: 4700000004   Submitted: 2026-09-18 20:45:00
+  Product             Color Size        Qty Initials Back print      Number Price       
+  Fixed Socks         White M (39-42)   3                                   253.50 kr   
+  Archen              Black S           1   AS                              399.10 kr   
+  Thames              Black M           2                                   999.00 kr   
+  Poplar              White L           2                                   989.00 kr   
+  Rivet               Black One size    1                                   124.50 kr   
+  Barrier             Black S           1                                   249.50 kr   
+  Rookie              Black -           1                                   ?           
+  Total garments: 11
+  Clothing: 2 965.00 kr
+  Prints:   49.60 kr
+  Total:    3 014.60 kr
+  (no price for Rookie (no size); not included in total)
+
+Per Nordmann
+  Email: per@example.com   Phone: 4700000005   Submitted: 2026-09-19 08:00:00
+  (no items ordered)
+
