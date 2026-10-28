@@ -306,7 +306,7 @@ def run(arguments: argparse.Namespace) -> None:
     while True:
         try:
             query = input("> ").strip()
-        except (EOFError, KeyboardInterrupt):
+        except EOFError, KeyboardInterrupt:
             print()
             break
         if not query:
