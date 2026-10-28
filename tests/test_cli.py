@@ -45,7 +45,9 @@ def test_no_command_prints_overview(capsys: pytest.CaptureFixture[str]) -> None:
     cli.main([])
     out = capsys.readouterr().out
     assert "usage: apparel" in out
-    assert all(command in out for command in ("convert", "lookup", "prices", "help"))
+    assert all(
+        command in out for command in ("convert", "lookup", "prices", "totals", "help")
+    )
 
 
 def test_version(capsys: pytest.CaptureFixture[str]) -> None:
@@ -55,7 +57,7 @@ def test_version(capsys: pytest.CaptureFixture[str]) -> None:
     assert capsys.readouterr().out.strip() == f"apparel {__version__}"
 
 
-@pytest.mark.parametrize("command", ["convert", "lookup", "prices"])
+@pytest.mark.parametrize("command", ["convert", "lookup", "prices", "totals"])
 def test_help_command_matches_command_help(
     command: str, capsys: pytest.CaptureFixture[str]
 ) -> None:

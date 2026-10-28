@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 
-from . import __version__, lookup, prices, transform
+from . import __version__, lookup, prices, totals, transform
 
 DESCRIPTION = "Order tools for TSI Volleyball apparel."
 EPILOG = "Run 'apparel help <command>' (or 'apparel <command> --help') for details."
@@ -46,6 +46,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     prices.add_arguments(prices_parser)
     prices_parser.set_defaults(handler=prices.run)
+
+    totals_parser = commands.add_parser(
+        "totals",
+        help="List the different amounts people owe, for invoicing",
+        description=totals.__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    totals.add_arguments(totals_parser)
+    totals_parser.set_defaults(handler=totals.run)
 
     help_parser = commands.add_parser(
         "help", help="Show help for a command", description="Show help for a command."

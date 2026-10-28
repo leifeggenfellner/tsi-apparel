@@ -3,7 +3,8 @@
 Order tools for TSI Volleyball apparel. One command, `apparel`, that:
 
 - **converts** the form answers into the supplier's order sheet (quantities per product, color and size, plus one row per garment that gets a print), and
-- **looks up** what one person ordered and what it costs, for the pickup desk.
+- **looks up** what one person ordered and what it costs, for the pickup desk, and
+- **totals** what everyone owes, so you know which invoices to send.
 
 > **Order CSVs contain personal data** (names, emails, phone numbers). They are
 > gitignored and CI fails if one is committed. Only the blank template
@@ -42,7 +43,7 @@ apparel help <command>   # same as: apparel <command> --help
 apparel --version
 ```
 
-`convert` and `lookup` read `apparel_order.csv` from the current directory
+`convert`, `lookup` and `totals` read `apparel_order.csv` from the current directory
 unless you pass `--input`.
 
 ### `apparel convert`: fill the supplier order sheet
@@ -107,6 +108,34 @@ Ola Nordmann
 
 The kit's 728.70 kr is the 499.50 kr kit plus name (99.20), initials (49.60)
 and the number on front (30.00) and back (50.40).
+
+### `apparel totals`: the amounts to invoice
+
+```sh
+apparel totals                    # every amount owed, and how many people owe it
+apparel totals --no-print-costs   # garments only, no transfer prints
+apparel totals --input other.csv
+```
+
+Lists each different amount people owe, lowest first, so you know which
+invoices to make. Each person's amount is the `Total:` that `apparel lookup`
+shows for them. Example output:
+
+```
+4 people, 3 different amounts:
+
+       Amount   People
+    189.00 kr   2
+    378.00 kr   1
+  1 323.00 kr   1
+
+Total: 2 079.00 kr
+```
+
+People who ordered nothing are left out. People with an unpriced item (`?` in
+`lookup`) aren't put under an amount, since what they owe isn't known; they are
+counted at the end instead. The output has no names or contact details, so it
+is safe to share.
 
 ### `apparel prices`: the price list
 
