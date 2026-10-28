@@ -113,6 +113,8 @@ and the number on front (30.00) and back (50.40).
 
 ```sh
 apparel totals                    # every amount owed, and how many people owe it
+apparel totals --amount 700       # who owes exactly 700.00 kr
+apparel totals --unpriced         # who has an item with no price
 apparel totals --no-print-costs   # garments only, no transfer prints
 apparel totals --input other.csv
 ```
@@ -136,6 +138,25 @@ People who ordered nothing are left out. People with an unpriced item (`?` in
 `lookup`) aren't put under an amount, since what they owe isn't known; they are
 counted at the end instead. The output has no names or contact details, so it
 is safe to share.
+
+To see who gets the invoice for an amount, pass it to `--amount`. Write it the
+way `totals` shows it, or more loosely: `1200`, `1 200`, `1200,00` and
+`1 200.00 kr` are all the same amount.
+
+```
+$ apparel totals --amount 189
+2 people owe 189.00 kr:
+
+  Bob Smith      bob@example.com   4700000001
+  Ola Nordmann   ola@example.com   4700000001
+```
+
+If nobody owes that amount, it shows the closest amounts that are owed and
+exits with status 1. `--unpriced` lists the people with an unpriced item, and
+which items have no price, so you can price them before invoicing.
+
+> `--amount` and `--unpriced` print names, emails and phone numbers. Don't
+> share their output the way you would plain `apparel totals`.
 
 ### `apparel prices`: the price list
 
