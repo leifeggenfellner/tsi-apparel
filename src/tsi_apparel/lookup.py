@@ -159,6 +159,35 @@ def print_cost(line: dict) -> Decimal:
     )
 
 
+def line_cost(
+    line: dict, include_print_costs: bool = True
+) -> tuple[Decimal | None, Decimal]:
+    """Clothing cost (None when the garment has no price) and print cost."""
+    unit_price = garment_unit_price(str(line["product"]), str(line["size"]))
+    clothing = None if unit_price is None else unit_price * int(line["quantity"])
+    return clothing, print_cost(line) if include_print_costs else Decimal(0)
+
+
+def unpriced_item(line: dict) -> str:
+    return f"{line['product']} {line['size'] or '(no size)'}"
+
+
+def order_total(
+    lines: list[dict], include_print_costs: bool = True
+) -> tuple[Decimal, list[str]]:
+    """What a person owes, and the unpriced items left out of that total."""
+    total = Decimal(0)
+    unpriced: list[str] = []
+    for line in lines:
+        clothing, prints = line_cost(line, include_print_costs)
+        total += prints
+        if clothing is None:
+            unpriced.append(unpriced_item(line))
+        else:
+            total += clothing
+    return total, sorted(set(unpriced))
+
+
 def print_order(
     row: tuple[str, ...],
     headers: list[str],
@@ -199,14 +228,12 @@ def print_order(
             str(number),
         )
         if show_prices:
-            unit_price = garment_unit_price(str(line["product"]), str(line["size"]))
-            line_prints = print_cost(line) if include_print_costs else Decimal(0)
+            line_clothing, line_prints = line_cost(line, include_print_costs)
             prints_cost += line_prints
-            if unit_price is None:
-                unpriced.append(f"{line['product']} {line['size'] or '(no size)'}")
+            if line_clothing is None:
+                unpriced.append(unpriced_item(line))
                 cells += ("?",)
             else:
-                line_clothing = unit_price * int(line["quantity"])
                 clothing_cost += line_clothing
                 cells += (format_nok(line_clothing + line_prints),)
         print("  " + "".join(cell.ljust(width) for cell, width in zip(cells, widths)))
