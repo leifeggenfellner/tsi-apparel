@@ -27,6 +27,9 @@ When releasing, rename **Unreleased** to the new version and date, bump
 - `apparel totals` lists every different amount people owe on an order, and
   how many people owe each, for sending invoices. Takes `--input` and
   `--no-print-costs` like `lookup` (#24).
+- `apparel totals --amount <kr>` lists the people who owe exactly that amount,
+  with email and phone, to know who gets which invoice. `--unpriced` lists the
+  people whose total isn't known because an item has no price (#25).
 
 ### Changed
 - Python 3.15 or newer is now required, up from 3.12. The Nix dev shell uses
