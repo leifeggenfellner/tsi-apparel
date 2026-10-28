@@ -1,0 +1,38 @@
+$ apparel totals
+3 people, 3 different amounts:
+
+       Amount   People
+  3 447.00 kr   1
+  3 863.60 kr   1
+  8 042.30 kr   1
+
+Total: 15 352.90 kr
+
+1 more person has an item with no price, so they're not counted above. Use `apparel totals --unpriced` to list them.
+
+$ apparel totals --no-print-costs
+3 people, 3 different amounts:
+
+       Amount   People
+  2 951.00 kr   1
+  3 176.00 kr   1
+  7 645.50 kr   1
+
+Total: 13 772.50 kr
+
+1 more person has an item with no price, so they're not counted above. Use `apparel totals --unpriced` to list them.
+
+$ apparel totals --unpriced
+1 person has an item with no price:
+
+  Alice Smith   alice@example.com   4700000004   no price for Rookie (no size)
+
+$ apparel totals --amount 3 447
+1 person owes 3 447.00 kr:
+
+  Kari Nordmann   kari@example.com   4700000002
+
+$ apparel totals --amount 100
+Nobody owes 100.00 kr.
+Closest amounts owed: 3 447.00 kr, 3 863.60 kr, 8 042.30 kr
+(exit 1)

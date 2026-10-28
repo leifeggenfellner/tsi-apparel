@@ -229,6 +229,26 @@ CI runs on every push to `main` and every pull request, as three parallel
 jobs: lint and format check, the tests plus a smoke test of the installed CLI
 on Python 3.15, and a check that no order data is committed.
 
+### Golden files
+
+`tests/test_golden.py` runs `convert`, `lookup` and `totals` on a synthetic
+answer sheet and compares the output byte for byte with the files in
+`tests/golden/`. The sheet uses today's form layout, every product and
+placeholder people only, so any change in output, even by accident, fails the
+test.
+
+When a change in output is intended, rewrite the golden files and check that
+the diff shows only what you meant to change:
+
+```sh
+UPDATE_GOLDEN=1 pytest tests/test_golden.py
+git diff tests/golden/
+```
+
+Commit the updated golden files in the same pull request as the change. They
+end in `.golden`, not `.csv`, so the order-data check doesn't reject them.
+Never put real form answers in the test.
+
 Every change that users notice gets an entry in [`CHANGELOG.md`](CHANGELOG.md)
 under **Unreleased**, in the same pull request. Update this README in that PR
 too whenever commands, flags, prices or the form format change. The pull
