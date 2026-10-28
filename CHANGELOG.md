@@ -24,6 +24,9 @@ When releasing, rename **Unreleased** to the new version and date, bump
 - Prices for Academy Evo (751 kr), Rivet (249 kr) and Barrier (499 kr), before
   the 50% discount. Every product on the form now has a price (#12).
 - README with installation, usage, prices and form format (#14).
+- `apparel totals` lists every different amount people owe on an order, and
+  how many people owe each, for sending invoices. Takes `--input` and
+  `--no-print-costs` like `lookup` (#24).
 
 ### Changed
 - Python 3.15 or newer is now required, up from 3.12. The Nix dev shell uses
