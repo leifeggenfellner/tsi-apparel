@@ -1,4 +1,8 @@
-"""Expand apparel order CSV families into the supplied order-form template."""
+"""Expand apparel order CSV families into the supplied order-form template.
+
+Also reads the simpler roster layout (one row per person, a quantity column per
+product and shared Size, Initials, Back Print, Number and Notes columns).
+"""
 
 from __future__ import annotations
 
@@ -13,6 +17,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import polars as pl
+
+from . import order_form
 
 DEFAULT_TEMPLATE = Path(__file__).parent / "data" / "order_schema.csv"
 
@@ -98,6 +104,25 @@ PRINT_INSTRUCTION_SUPPRESSION_CATEGORIES = frozenset(
         "Annet",
     }
 )
+# Roster layout: one quantity column per product, e.g. "TSI Wyvern BLK".
+ROSTER_COLUMNS = (
+    "name",
+    "email",
+    "phone",
+    "size",
+    "initials",
+    "back print",
+    "number",
+    "notes",
+)
+ROSTER_PRODUCT_PREFIX = "tsi "
+ROSTER_PRODUCT_ALIASES = {"wyvern": "Wyvern Kit"}
+ROSTER_COLOR_CODES = {
+    "blk": "Black",
+    "black": "Black",
+    "wht": "White",
+    "white": "White",
+}
 TRUE_VALUES = {"yes", "true", "1", "on", "ja", "x", "selected", "black", "white"}
 FALSE_VALUES = {"no", "false", "0", "off", "nei", ""}
 
@@ -445,8 +470,8 @@ def poplar_selections(
     return selections
 
 
-def _load_source(input_path: Path) -> tuple[pl.DataFrame, list[str], list[FamilyRange]]:
-    source = (
+def _read_source(input_path: Path) -> pl.DataFrame:
+    return (
         pl.scan_csv(
             input_path,
             has_header=True,
@@ -461,8 +486,105 @@ def _load_source(input_path: Path) -> tuple[pl.DataFrame, list[str], list[Family
         .collect()
         .fill_null("")
     )
+
+
+def _load_source(input_path: Path) -> tuple[pl.DataFrame, list[str], list[FamilyRange]]:
+    source = _read_source(input_path)
     headers = list(source.columns)
     return source, headers, validate_source_schema(headers)
+
+
+def is_roster_layout(headers: list[str]) -> bool:
+    fields = {normalized(header) for header in headers}
+    return {"name", "size"} <= fields and not any(
+        field.startswith("order ") for field in fields
+    )
+
+
+def roster_product(header: str) -> tuple[str, str]:
+    """Product and color for a roster column; no color code means Black."""
+    words = re.sub(r"\s+", " ", header).strip().split(" ")
+    if normalized(words[0]) == ROSTER_PRODUCT_PREFIX.strip():
+        words = words[1:]
+    color = "Black"
+    if len(words) > 1 and normalized(words[-1]) in ROSTER_COLOR_CODES:
+        color = ROSTER_COLOR_CODES[normalized(words.pop())]
+    product = " ".join(words)
+    product = ROSTER_PRODUCT_ALIASES.get(normalized(product), product)
+    product_category(product)
+    return product, color
+
+
+def _aggregate_roster(source: pl.DataFrame, headers: list[str]) -> AggregatedOrders:
+    fields = {normalized(header): index for index, header in enumerate(headers)}
+    products = [
+        (index, *roster_product(header))
+        for index, header in enumerate(headers)
+        if normalized(header) not in ROSTER_COLUMNS
+    ]
+    if not products:
+        raise TransformError("Roster has no product columns")
+
+    def field(row: tuple[str, ...], name: str) -> str:
+        return row[fields[name]].strip() if name in fields else ""
+
+    aggregate: OrderedDict[tuple[str, str, str], OrderedDict[str, int]] = OrderedDict()
+    print_rows: list[list[str]] = []
+    source_total = 0
+    for data_index, row in enumerate(source.iter_rows()):
+        source_row = data_index + 2
+        ordered = [
+            (product, color, quantity)
+            for index, product, color in products
+            if (
+                quantity := parse_quantity(
+                    row[index], f"source row {source_row}, {headers[index]}"
+                )
+            )
+        ]
+        if len(ordered) > 1:
+            raise TransformError(
+                f"source row {source_row}: roster rows share one size and print, "
+                "so order one product per row"
+            )
+        back_text = field(row, "back print")
+        initials = field(row, "initials")
+        number = field(row, "number")
+        notes = field(row, "notes")
+        if not ordered:
+            if back_text or initials or number or notes:
+                raise TransformError(
+                    f"source row {source_row}: print or notes given but no product ordered"
+                )
+            continue
+        product, color, quantity = ordered[0]
+        if number and normalized(product) != "wyvern kit":
+            raise TransformError(
+                f"source row {source_row}, {product}: only the Wyvern Kit takes a number"
+            )
+        if notes and not (back_text or initials or number):
+            raise TransformError(
+                f"source row {source_row}, {product}: notes given but nothing to print"
+            )
+        category = product_category(product)
+        size = standardize_size(field(row, "size"))
+        size_quantities = aggregate.setdefault(
+            (product, category, color), OrderedDict()
+        )
+        size_quantities[size] = size_quantities.get(size, 0) + quantity
+        source_total += quantity
+        if back_text or initials or number:
+            # Notes are the print instructions, verbatim; no note leaves them empty.
+            print_rows.extend(
+                [product, color, size, back_text, initials, number, number, notes]
+                for _ in range(quantity)
+            )
+    return AggregatedOrders(
+        slots=grouped_by_product(list(aggregate.items())),
+        print_rows=grouped_print_rows_by_product(print_rows),
+        source_total=source_total,
+        expected_print_count=len(print_rows),
+    )
 
 
 def _load_template(template_path: Path) -> list[list[str]]:
@@ -601,6 +723,11 @@ def _validate_output(output: list[list[str]], orders: AggregatedOrders) -> None:
         raise TransformError("Print row count check failed")
 
 
+def _check_unchanged(before_hashes: dict[Path, str]) -> None:
+    if any(file_hash(path) != digest for path, digest in before_hashes.items()):
+        raise TransformError("Input or template changed during transformation")
+
+
 def _publish_output(
     output: list[list[str]], output_path: Path, before_hashes: dict[Path, str]
 ) -> None:
@@ -623,12 +750,15 @@ def _publish_output(
             written = list(csv.reader(check_file, delimiter=","))
         if not written or any(len(row) != width for row in written):
             raise TransformError("Temporary output validation failed")
-        if any(file_hash(path) != digest for path, digest in before_hashes.items()):
-            raise TransformError("Input or template changed during transformation")
+        _check_unchanged(before_hashes)
         os.replace(temporary_name, output_path)
     finally:
         if temporary_name and os.path.exists(temporary_name):
             os.unlink(temporary_name)
+
+
+def is_order_form(output_path: Path) -> bool:
+    return output_path.suffix.casefold() == ".xlsx"
 
 
 def transform(
@@ -643,12 +773,20 @@ def transform(
         )
     del category
     before_hashes = {path: file_hash(path) for path in (input_path, template_path)}
-    source, headers, families = _load_source(input_path)
-    template = _load_template(template_path)
-    orders = _aggregate_orders(source, headers, families)
-    output = _render_template(template, orders)
-    _validate_output(output, orders)
-    _publish_output(output, output_path, before_hashes)
+    source = _read_source(input_path)
+    headers = list(source.columns)
+    if is_roster_layout(headers):
+        orders = _aggregate_roster(source, headers)
+    else:
+        orders = _aggregate_orders(source, headers, validate_source_schema(headers))
+    if is_order_form(output_path):
+        order_form.publish(
+            orders, template_path, output_path, lambda: _check_unchanged(before_hashes)
+        )
+    else:
+        output = _render_template(_load_template(template_path), orders)
+        _validate_output(output, orders)
+        _publish_output(output, output_path, before_hashes)
     return orders.source_total, len(orders.print_rows)
 
 
@@ -669,11 +807,13 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--input", help="Form answers CSV (default: apparel_order.csv)")
     parser.add_argument(
         "--template",
-        help="Order sheet template (default: the bundled order_schema.csv)",
+        help="Order sheet template (default: the bundled order_schema.csv, "
+        "or order_form.xlsx when the output is .xlsx)",
     )
     parser.add_argument(
         "--output",
-        help="Where to write the result (default: populated_order_schema.csv)",
+        help="Where to write the result (default: populated_order_schema.csv); "
+        "a .xlsx name writes the supplier's Excel order form",
     )
     parser.add_argument(
         "--category",
@@ -705,9 +845,15 @@ def run(arguments: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
         for positional_path, option_path, default in zip(
             positional_paths,
             option_paths,
-            ("apparel_order.csv", DEFAULT_TEMPLATE, "populated_order_schema.csv"),
+            ("apparel_order.csv", None, "populated_order_schema.csv"),
         )
     )
+    if template_file is None:
+        template_file = (
+            order_form.TEMPLATE
+            if is_order_form(Path(output_name))
+            else DEFAULT_TEMPLATE
+        )
     try:
         quantity, print_count = transform(
             Path(input_name),

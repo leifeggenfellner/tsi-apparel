@@ -12,9 +12,15 @@
           # mypyc's tests build with -Werror, which trips on a _POSIX_C_SOURCE
           # redefinition in 3.15's pyconfig.h. Pulled in via pip -> sphinx.
           mypy = super.mypy.overridePythonAttrs (_: { doCheck = false; });
+          # Its vendored stdlib ElementTree tests expect pre-3.15 error messages.
+          # Pulled in via openpyxl.
+          et-xmlfile = super.et-xmlfile.overridePythonAttrs (_: { doCheck = false; });
+          # Its tests need pandas and numpy, which don't build on 3.15 yet.
+          openpyxl = super.openpyxl.overridePythonAttrs (_: { doCheck = false; });
         };
       };
       python = python315.withPackages (pythonPackages: with pythonPackages; [
+        openpyxl
         pip
         polars
         pytest
