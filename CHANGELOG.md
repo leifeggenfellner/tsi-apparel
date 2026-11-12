@@ -33,10 +33,11 @@ When releasing, rename **Unreleased** to the new version and date, bump
 - `apparel convert` reads roster CSVs (one row per person, with `Name`, `Size`,
   `Initials`, `Back Print`, `Number` and `Notes` columns), such as the board and
   coaches order. Products default to Black, only the Wyvern Kit takes a number,
-  and the notes become the print instructions, left empty when there is none.
+  and the notes become the print instructions, left empty when there is none
+  (#32).
 - `apparel convert --output order.xlsx` writes the supplier's Excel order form,
   with its colors, dropdowns and total formulas. The order details in rows 3–7
-  are left blank to fill in.
+  are left blank to fill in (#33).
 
 ### Changed
 - Python 3.15 or newer is now required, up from 3.12. The Nix dev shell uses
@@ -46,7 +47,7 @@ When releasing, rename **Unreleased** to the new version and date, bump
 - Form values are trimmed of stray leading and trailing spaces when the
   answer sheet is read (#11).
 - The Nix dev shell now includes pip and pipx (#9).
-- `openpyxl` is a new dependency, for the Excel order form.
+- `openpyxl` is a new dependency, for the Excel order form (#33).
 
 ### Fixed
 - A shirt number is now printed on both the front and the back of the shirt.
