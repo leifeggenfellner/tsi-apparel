@@ -1045,3 +1045,78 @@ def test_main_rejects_matching_positional_and_option_path(
     assert "a positional path cannot be combined with its matching long option" in (
         capsys.readouterr().err
     )
+
+
+ROSTER_HEADERS = [
+    "Name",
+    "Email",
+    "Phone",
+    "TSI Poseidon",
+    "TSI Artemis",
+    "TSI Wyvern BLK",
+    "Size",
+    "Initials",
+    "Back Print",
+    "Number",
+    "Notes",
+]
+
+
+def test_transform_reads_roster_layout(tmp_path: Path) -> None:
+    source, template, output = make_transform_paths(tmp_path)
+    write_csv(
+        source,
+        [
+            ROSTER_HEADERS,
+            ["Ola Nordmann", "", "", "1", "0", "0", "L", "ON", "Trener", "", ""],
+            [
+                "Kari Nordmann",
+                "",
+                "",
+                "0",
+                "1",
+                "0",
+                "S",
+                "KN",
+                "Leder",
+                "",
+                "To linjer",
+            ],
+            ["Bob Smith", "", "", "0", "0", "1", "M", "", "Smith", "7", ""],
+            ["Alice Smith", "", "", "1", "0", "0", "XL", "", "", "", ""],
+        ],
+    )
+    assert app.transform(source, template, output, "Apparel") == (4, 3)
+    rows = read_csv(output)
+    assert rows[app.PRODUCT_ROW][1:4] == ["Poseidon", "Artemis", "Wyvern Kit"]
+    assert rows[app.COLOR_ROW][1:4] == ["Black", "Black", "Black"]
+    assert rows[app.SIZE_ROWS["XL"]][1] == "1"
+    assert [row[:8] for row in rows[app.PRINT_HEADER_ROW + 1 :]] == [
+        ["Poseidon", "Black", "L", "Trener", "ON", "", "", ""],
+        ["Artemis", "Black", "S", "Leder", "KN", "", "", "To linjer"],
+        ["Wyvern Kit", "Black", "M", "Smith", "", "7", "7", ""],
+    ]
+
+
+@pytest.mark.parametrize(
+    ("row", "message"),
+    [
+        (["Ola Nordmann", "", "", "1", "0", "0", "L", "", "", "7", ""], "Wyvern Kit"),
+        (["Ola Nordmann", "", "", "1", "1", "0", "L", "", "", "", ""], "one product"),
+        (["Ola Nordmann", "", "", "0", "0", "0", "L", "ON", "", "", ""], "no product"),
+        (["Ola Nordmann", "", "", "1", "0", "0", "L", "", "", "", "Bak"], "nothing"),
+    ],
+)
+def test_transform_rejects_ambiguous_roster_rows(
+    tmp_path: Path, row: list[str], message: str
+) -> None:
+    source, template, output = make_transform_paths(tmp_path)
+    write_csv(source, [ROSTER_HEADERS, row])
+    with pytest.raises(app.TransformError, match=message):
+        app.transform(source, template, output, "Apparel")
+    assert not output.exists()
+
+
+def test_roster_product_rejects_unknown_product() -> None:
+    with pytest.raises(app.TransformError, match="Unmapped"):
+        app.roster_product("TSI Unknown")

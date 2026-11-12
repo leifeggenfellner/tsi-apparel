@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "Order tools for TSI Volleyball apparel: convert form answers to the supplier order sheet, look up orders and costs"
 readme = "README.md"
 requires-python = ">=3.15"
-dependencies = ["polars>=1.40"]
+dependencies = ["openpyxl>=3.1", "polars>=1.40"]
 
 [project.optional-dependencies]
 dev = ["pytest>=9", "ruff>=0.15"]

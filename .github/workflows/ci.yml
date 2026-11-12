@@ -74,12 +74,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Order CSVs hold personal data; only the blank template may be tracked.
-      - name: Check tracked CSV files
+      # Order files hold personal data; only the blank templates may be tracked.
+      - name: Check tracked CSV and Excel files
         run: |
-          unexpected=$(git ls-files '*.csv' ':!:src/tsi_apparel/data/order_schema.csv')
+          unexpected=$(git ls-files '*.csv' '*.xlsx' ':!:src/tsi_apparel/data/order_schema.csv' ':!:src/tsi_apparel/data/order_form.xlsx')
           if [ -n "$unexpected" ]; then
-            echo "::error::CSV files must not be committed (they may contain personal data):"
+            echo "::error::CSV and Excel files must not be committed (they may contain personal data):"
             echo "$unexpected"
             exit 1
           fi

@@ -6,9 +6,10 @@ Order tools for TSI Volleyball apparel. One command, `apparel`, that:
 - **looks up** what one person ordered and what it costs, for the pickup desk, and
 - **totals** what everyone owes, so you know which invoices to send.
 
-> **Order CSVs contain personal data** (names, emails, phone numbers). They are
-> gitignored and CI fails if one is committed. Only the blank template
-> `src/tsi_apparel/data/order_schema.csv` belongs in the repo. Use placeholder
+> **Order CSVs and Excel files contain personal data** (names, emails, phone
+> numbers). They are gitignored and CI fails if one is committed. Only the blank
+> templates `src/tsi_apparel/data/order_schema.csv` and `order_form.xlsx` belong
+> in the repo. Use placeholder
 > names like Ola Nordmann or Bob Smith in tests and examples.
 
 ## Install
@@ -66,6 +67,23 @@ The output is written atomically, and it is checked before it is published:
 - the number of print rows must match the number of printed garments
 
 `convert` refuses to write over its input or template.
+
+#### Excel order form
+
+Give `--output` a `.xlsx` name to get the supplier's Excel order form
+(Macron's *Ordremal*) instead, with its colors, dropdowns and total formulas:
+
+```sh
+apparel convert --output order.xlsx
+```
+
+Products are named the supplier's way (*TSI Poseidon*, *TSI Wyvern*) and colors
+in Norwegian (*Svart*, *Hvit*). The order details in rows 3–7 (dates, customer
+card, club, reference person, order label) and *Info om trykkemal* are left
+blank for whoever places the order. The grid widens past eight products when
+needed. The form has no 5XS or 4XS rows, so an order with those sizes stops with
+an error; write a `.csv` for it. The blank template is
+`src/tsi_apparel/data/order_form.xlsx`.
 
 ### `apparel lookup`: one person's order and its cost
 
@@ -215,6 +233,27 @@ guessed.
 
 Prints get a placement instruction only on kits, training tops and jackets.
 Prints on bags, caps, shorts, trousers and socks use the factory default spot.
+
+### Roster CSV format
+
+`convert` also reads a simpler roster, one row per person, for small orders like
+the board and coaches. It is recognised by its `Name` and `Size` columns:
+
+```sh
+apparel convert --input clothing_board_coaches.csv --output coaches_order.csv
+```
+
+- `Name`, `Email`, `Phone`: contact details, not used on the order sheet.
+- One quantity column per product, e.g. `TSI Poseidon` or `TSI Wyvern BLK`. The
+  `TSI` prefix is optional, `Wyvern` means the Wyvern Kit, and a trailing `BLK`
+  or `WHT` sets the color. Without one, the color is Black.
+- `Size`, `Initials`, `Back Print`: apply to the product on that row. Order one
+  product per row.
+- `Number`: printed front and back. Only the Wyvern Kit takes a number.
+- `Notes`: copied as is into the print instructions. With no note, the
+  instructions are left empty; the form's default placements aren't added.
+
+`lookup` and `totals` read the form export only.
 
 ## Development
 
